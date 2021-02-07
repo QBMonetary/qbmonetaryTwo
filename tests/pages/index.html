@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Deeplink test page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <style>
+    table td:last-child,
+    a {
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    const currentUrl = new URL(window.location);
+    currentUrl.search = '';
+    const successUrl = encodeURIComponent(`${currentUrl}?result=success`);
+    const cancelUrl = encodeURIComponent(`${currentUrl}?result=cancel`);
+    const callbackParams = `x-success=${successUrl}&x-cancel=${cancelUrl}`;
+    const message = encodeURIComponent(`This is a test message! http://example.com`);
+    const url = encodeURIComponent('http://example.com/article?id=123123');
+
+    const prefixes = ['superhero:', 'https://wallet.superhero.com/', 'http://localhost:5000/'];
+    const paths = [
+      '404',
+      'tip',
+      'tip?url=example.com',
+      `tip?url=${url}`,
+      `tip?url=${url}&${callbackParams}`,
+      `tip?url=${url}&amount=1.1&message=${message}&${callbackParams}`,
+      `retip?id=26_v1`,
+      `retip?id=25_v1&${callbackParams}`,
+      `retip?id=26_v1&${callbackParams}`,
+      `comment?id=26_v1&text=${message}`,
+      `comment?id=26_v1&text=${message}&${callbackParams}`,
+      `comment?id=26_v1&parentId=87&text=${message}&${callbackParams}`,
+      `address` +
+        `?x-success=${encodeURIComponent(`${currentUrl}?result=success&address={address}`)}` +
+        `&x-cancel=${cancelUrl}`,
+      `sign-message` +
+        `?message=${message}` +
+        `&x-success=${encodeURIComponent(`${currentUrl}?result=success&signature={signature}`)}` +
+        `&x-cancel=${cancelUrl}`,
+      `invite/Yqk76XDXNGVMZiCVfzE9NGHwhbXiCAsah2bxVpevCGjdLeeqPaSBVR4CkAdLyb1a7HGn2RD69RDLxYF3rdL3MWouvTyyK`
+    ];
+
+    function rerenderDocument() {
+      const prefix = localStorage.selectedUrlPrefix || prefixes[0];
+      document.open();
+
+      const currentUrlWithParams = new URL(window.location);
+      document.write(`
+        <table>
+          ${['result', 'address', 'signature']
+          .map(paramName => `<tr>
+              <td>${paramName}</td>
+              <td>${currentUrlWithParams.searchParams.get(paramName)}</td>
+            </tr>`)
+          .join('\n')}
+        </table>
+        <br>
+      `);
+
+      document.write(`
+        Deeplink prefix <select id="prefix">
+          ${prefixes
+          .map(option => `<option value="${option}" ${prefix === option ? 'selected' : ''}>${option}</option>`)
+          .join('')}
+        </select>
+        <br>
+        <br>
+      `);
+      document.querySelector('#prefix').addEventListener(
+        'change',
+        event => {
+          localStorage.selectedUrlPrefix = event.target.value;
+          rerenderDocument();
+        },
+      );
+
+      paths.forEach(path => {
+        const url = prefix + path;
+        document.write(`<a href="${url}">${path}</a><br><br>`);
+      });
+      document.close();
+    }
+
+    rerenderDocument();
+  </script>
+</body>
+</html>
